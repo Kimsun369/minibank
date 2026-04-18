@@ -1,8 +1,17 @@
-const BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080')
+const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
 
 function authHeaders() {
   const token = localStorage.getItem('access_token')
   return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+async function parseResponse(res) {
+  const json = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const message = json.error || json.message || res.statusText
+    throw new Error(message)
+  }
+  return json
 }
 
 export async function registerUser(payload) {
@@ -11,7 +20,7 @@ export async function registerUser(payload) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  return res.json()
+  return parseResponse(res)
 }
 
 export async function loginUser(payload) {
@@ -20,7 +29,7 @@ export async function loginUser(payload) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  return res.json()
+  return parseResponse(res)
 }
 
 export async function renewAccess(refreshToken) {
@@ -29,7 +38,7 @@ export async function renewAccess(refreshToken) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh_token: refreshToken }),
   })
-  return res.json()
+  return parseResponse(res)
 }
 
 export async function listAccounts(page_id = 1, page_size = 5) {
@@ -37,12 +46,12 @@ export async function listAccounts(page_id = 1, page_size = 5) {
   url.searchParams.set('page_id', page_id)
   url.searchParams.set('page_size', page_size)
   const res = await fetch(url.toString(), { headers: { ...authHeaders() } })
-  return res.json()
+  return parseResponse(res)
 }
 
 export async function getAccount(id) {
   const res = await fetch(`${BASE}/accounts/${id}`, { headers: { ...authHeaders() } })
-  return res.json()
+  return parseResponse(res)
 }
 
 export async function listTransfers(account_id, page_id = 1, page_size = 50) {
@@ -51,7 +60,7 @@ export async function listTransfers(account_id, page_id = 1, page_size = 50) {
   url.searchParams.set('page_id', page_id)
   url.searchParams.set('page_size', page_size)
   const res = await fetch(url.toString(), { headers: { ...authHeaders() } })
-  return res.json()
+  return parseResponse(res)
 }
 
 export async function createAccount(body) {
@@ -60,7 +69,7 @@ export async function createAccount(body) {
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
   })
-  return res.json()
+  return parseResponse(res)
 }
 
 export async function createTransfer(body) {
@@ -69,7 +78,7 @@ export async function createTransfer(body) {
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
   })
-  return res.json()
+  return parseResponse(res)
 }
 
 export default {
