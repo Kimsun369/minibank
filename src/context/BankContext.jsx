@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../lib/api';
+import { useAuth } from './AuthContext';
 const BankContext = createContext(undefined);
 // transactions are fetched from backend
 export const BankProvider = ({
@@ -8,58 +9,112 @@ export const BankProvider = ({
   const [account, setAccount] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { user, isAuthenticated } = useAuth();
 
   const normalizeAccount = acc => acc ? { ...acc, type: acc.type || 'checking' } : acc;
 
-  useEffect(() => {
-    async function loadFromBackend() {
-      const storedAccount = localStorage.getItem('account');
-      let acc = null;
+  const clearAccount = () => {
+    setAccount(null);
+    setTransactions([]);
+    localStorage.removeItem('account');
+    localStorage.removeItem('transactions');
+  };
 
-      try {
-        if (storedAccount) {
-          acc = normalizeAccount(JSON.parse(storedAccount));
-          setAccount(acc);
-        } else {
-          const accounts = await api.listAccounts(1, 5);
-          if (Array.isArray(accounts) && accounts.length > 0) {
-            acc = normalizeAccount(accounts[0]);
-            setAccount(acc);
-            localStorage.setItem('account', JSON.stringify(acc));
-          } else {
-            const createdAccount = normalizeAccount(await api.createAccount({ currency: 'USD' }));
-            acc = createdAccount;
-            setAccount(acc);
-            localStorage.setItem('account', JSON.stringify(acc));
-          }
-        }
-      } catch (e) {
-        console.error('Failed to load account:', e);
+  const loadUserAccount = async () => {
+    if (!isAuthenticated || !user) return;
+
+    try {
+      let acc = null;
+      
+      // Always fetch fresh data from backend, don't use localStorage cache
+      const accounts = await api.listAccounts(1, 5);
+      if (Array.isArray(accounts) && accounts.length > 0) {
+        acc = normalizeAccount(accounts[0]);
+        setAccount(acc);
+        localStorage.setItem('account', JSON.stringify(acc));
+      } else {
+        // Create new account for user
+        const createdAccount = normalizeAccount(await api.createAccount({ currency: 'USD' }));
+        acc = createdAccount;
+        setAccount(acc);
+        localStorage.setItem('account', JSON.stringify(acc));
       }
 
       if (acc) {
         try {
-          const txs = await api.listTransfers(acc.id, 1, 50);
-          const mapped = (Array.isArray(txs) ? txs : []).map(t => ({
-            id: String(t.id),
-            accountId: String(acc.id),
-            type: t.from_account_id === acc.id ? 'debit' : 'credit',
-            amount: t.amount / 100,
-            description: 'Transfer',
-            category: 'transfer',
-            date: t.created_at,
-            status: 'completed',
-          }));
-          setTransactions(mapped);
-          localStorage.setItem('transactions', JSON.stringify(mapped));
+          console.log('Fetching transactions for account:', acc.id);
+          // Fetch both transfers and entries (deposits/withdrawals)
+          const [transfers, entries] = await Promise.all([
+            api.listTransfers(acc.id, 1, 50).catch((err) => {
+              console.error('Error fetching transfers:', err);
+              return [];
+            }),
+            api.listEntries(acc.id, 1, 50).catch((err) => {
+              console.error('Error fetching entries:', err);
+              return [];
+            }),
+          ]);
+
+          const allTransactions = [];
+
+          // Map transfers
+          if (Array.isArray(transfers) && transfers.length > 0) {
+            console.log('Processing transfers:', transfers);
+            transfers.forEach(t => {
+              allTransactions.push({
+                id: String(t.id),
+                accountId: String(acc.id),
+                type: t.from_account_id === acc.id ? 'debit' : 'credit',
+                amount: t.amount / 100,
+                description: t.from_account_id === acc.id ? `Transfer to ${t.to_account_id}` : `Transfer from ${t.from_account_id}`,
+                category: 'transfer',
+                date: t.created_at,
+                status: 'completed',
+              });
+            });
+          }
+
+          // Map entries (deposits/withdrawals)
+          if (Array.isArray(entries) && entries.length > 0) {
+            console.log('Processing entries:', entries);
+            entries.forEach(e => {
+              allTransactions.push({
+                id: `entry_${e.id}`,
+                accountId: String(acc.id),
+                type: e.amount > 0 ? 'credit' : 'debit',
+                amount: Math.abs(e.amount / 100),
+                description: e.amount > 0 ? 'Deposit' : 'Withdrawal',
+                category: e.amount > 0 ? 'deposit' : 'withdrawal',
+                date: e.created_at,
+                status: 'completed',
+              });
+            });
+          }
+
+          // Sort by date descending
+          allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+          console.log('All transactions:', allTransactions);
+          setTransactions(allTransactions);
+          localStorage.setItem('transactions', JSON.stringify(allTransactions));
         } catch (e) {
           console.error('Failed to load transactions:', e);
           setTransactions([]);
         }
       }
+    } catch (e) {
+      console.error('Failed to load account:', e);
+      clearAccount();
     }
-    loadFromBackend();
-  }, []);
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadUserAccount();
+    } else {
+      clearAccount();
+    }
+  }, [isAuthenticated, user]);
   const transfer = async (toAccountId, amount) => {
     setLoading(true);
     try {
@@ -71,12 +126,8 @@ export const BankProvider = ({
         setAccount(updatedAccount);
         localStorage.setItem('account', JSON.stringify(updatedAccount));
       }
-      if (res && res.transfer) {
-        const newTx = { id: String(res.transfer.id), accountId: String(account.id), type: 'debit', amount: amount, description: `Transfer to ${toAccountId}`, category: 'transfer', date: res.transfer.created_at, status: 'completed' };
-        const updated = [newTx, ...transactions];
-        setTransactions(updated);
-        localStorage.setItem('transactions', JSON.stringify(updated));
-      }
+      // Refresh transactions from backend
+      await fetchTransactions();
     } catch (e) {
       throw e;
     } finally {
@@ -92,20 +143,8 @@ export const BankProvider = ({
         setAccount(updatedAccount);
         localStorage.setItem('account', JSON.stringify(updatedAccount));
       }
-      // Add transaction to local state for UI
-      const newTransaction = { 
-        id: String(result.entry?.id || Date.now()), 
-        accountId: account.id, 
-        type: 'credit', 
-        amount: amount, 
-        description: 'Deposit', 
-        category: 'deposit', 
-        date: result.entry?.created_at || new Date().toISOString(), 
-        status: 'completed' 
-      };
-      const updated = [newTransaction, ...transactions];
-      setTransactions(updated);
-      localStorage.setItem('transactions', JSON.stringify(updated));
+      // Refresh transactions from backend
+      await fetchTransactions();
     } catch (e) {
       throw e;
     } finally {
@@ -121,20 +160,8 @@ export const BankProvider = ({
         setAccount(updatedAccount);
         localStorage.setItem('account', JSON.stringify(updatedAccount));
       }
-      // Add transaction to local state for UI
-      const newTransaction = { 
-        id: String(result.entry?.id || Date.now()), 
-        accountId: account.id, 
-        type: 'debit', 
-        amount: amount, 
-        description: 'Withdrawal', 
-        category: 'withdrawal', 
-        date: result.entry?.created_at || new Date().toISOString(), 
-        status: 'completed' 
-      };
-      const updated = [newTransaction, ...transactions];
-      setTransactions(updated);
-      localStorage.setItem('transactions', JSON.stringify(updated));
+      // Refresh transactions from backend
+      await fetchTransactions();
     } catch (e) {
       throw e;
     } finally {
@@ -145,10 +172,50 @@ export const BankProvider = ({
     setLoading(true);
     try {
       if (account) {
-        const txs = await api.listTransfers(account.id, 1, 50);
-        const mapped = (Array.isArray(txs) ? txs : []).map(t => ({ id: String(t.id), accountId: String(account.id), type: t.from_account_id === account.id ? 'debit' : 'credit', amount: t.amount / 100, description: 'Transfer', category: 'transfer', date: t.created_at, status: 'completed' }));
-        setTransactions(mapped);
-        localStorage.setItem('transactions', JSON.stringify(mapped));
+        const [transfers, entries] = await Promise.all([
+          api.listTransfers(account.id, 1, 50).catch(() => []),
+          api.listEntries(account.id, 1, 50).catch(() => []),
+        ]);
+
+        const allTransactions = [];
+
+        // Map transfers
+        if (Array.isArray(transfers)) {
+          transfers.forEach(t => {
+            allTransactions.push({
+              id: String(t.id),
+              accountId: String(account.id),
+              type: t.from_account_id === account.id ? 'debit' : 'credit',
+              amount: t.amount / 100,
+              description: t.from_account_id === account.id ? `Transfer to ${t.to_account_id}` : `Transfer from ${t.from_account_id}`,
+              category: 'transfer',
+              date: t.created_at,
+              status: 'completed',
+            });
+          });
+        }
+
+        // Map entries (deposits/withdrawals)
+        if (Array.isArray(entries)) {
+          entries.forEach(e => {
+            allTransactions.push({
+              id: `entry_${e.id}`,
+              accountId: String(account.id),
+              type: e.amount > 0 ? 'credit' : 'debit',
+              amount: Math.abs(e.amount / 100),
+              description: e.amount > 0 ? 'Deposit' : 'Withdrawal',
+              category: e.amount > 0 ? 'deposit' : 'withdrawal',
+              date: e.created_at,
+              status: 'completed',
+            });
+          });
+        }
+
+        // Sort by date descending
+        allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        setTransactions(allTransactions);
+        localStorage.setItem('transactions', JSON.stringify(allTransactions));
       }
     } catch (e) {
       console.error('Failed to fetch transactions:', e);

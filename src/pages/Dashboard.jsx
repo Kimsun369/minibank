@@ -16,6 +16,13 @@ const Dashboard = () => {
     transactions
   } = useBank();
   const [showBalance, setShowBalance] = React.useState(true);
+
+  // Debug log transactions
+  React.useEffect(() => {
+    console.log('Dashboard - Account:', account);
+    console.log('Dashboard - Transactions:', transactions);
+  }, [account, transactions]);
+
   const {
     ref: heroRef,
     translateY: heroParallax

@@ -99,12 +99,22 @@ export async function withdraw(amount) {
   return parseResponse(res)
 }
 
+export async function listEntries(account_id, page_id = 1, page_size = 50) {
+  const url = new URL(`${BASE}/entries`)
+  url.searchParams.set('account_id', account_id)
+  url.searchParams.set('page_id', page_id)
+  url.searchParams.set('page_size', page_size)
+  const res = await fetch(url.toString(), { headers: { ...authHeaders() } })
+  return parseResponse(res)
+}
+
 export default {
   registerUser,
   loginUser,
   renewAccess,
   listAccounts,
   listTransfers,
+  listEntries,
   getAccount,
   createAccount,
   createTransfer,

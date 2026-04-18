@@ -54,7 +54,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('account');
-    localStorage.removeItem('transactions');
+    // Keep transactions in localStorage for persistence
+    // localStorage.removeItem('transactions');
   };
 
   return (
