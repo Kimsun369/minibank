@@ -8,103 +8,135 @@ export const BankProvider = ({
   const [account, setAccount] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const normalizeAccount = acc => acc ? { ...acc, type: acc.type || 'checking' } : acc;
+
   useEffect(() => {
     async function loadFromBackend() {
       const storedAccount = localStorage.getItem('account');
       let acc = null;
-      if (storedAccount) {
-        acc = JSON.parse(storedAccount);
-        setAccount(acc);
-      } else {
-        try {
+
+      try {
+        if (storedAccount) {
+          acc = normalizeAccount(JSON.parse(storedAccount));
+          setAccount(acc);
+        } else {
           const accounts = await api.listAccounts(1, 5);
           if (Array.isArray(accounts) && accounts.length > 0) {
-            acc = accounts[0];
+            acc = normalizeAccount(accounts[0]);
             setAccount(acc);
             localStorage.setItem('account', JSON.stringify(acc));
           } else {
-            acc = { id: '1', userId: '1', accountNumber: '****5678', balance: 12500, currency: 'USD', type: 'checking' };
+            const createdAccount = normalizeAccount(await api.createAccount({ currency: 'USD' }));
+            acc = createdAccount;
             setAccount(acc);
             localStorage.setItem('account', JSON.stringify(acc));
           }
-        } catch (e) {
-          acc = { id: '1', userId: '1', accountNumber: '****5678', balance: 12500, currency: 'USD', type: 'checking' };
-          setAccount(acc);
-          localStorage.setItem('account', JSON.stringify(acc));
         }
+      } catch (e) {
+        console.error('Failed to load account:', e);
       }
 
-      const storedTransactions = localStorage.getItem('transactions');
-      if (storedTransactions) {
-        setTransactions(JSON.parse(storedTransactions));
-      } else {
-        // fetch transfers for the resolved account
-        if (acc) {
-          try {
-            const txs = await api.listTransfers(acc.id, 1, 50);
-            const mapped = (Array.isArray(txs) ? txs : []).map(t => ({ id: String(t.id), accountId: String(acc.id), type: t.from_account_id === acc.id ? 'debit' : 'credit', amount: t.amount, description: 'Transfer', category: 'transfer', date: t.created_at, status: 'completed' }));
-            setTransactions(mapped);
-            localStorage.setItem('transactions', JSON.stringify(mapped));
-          } catch (e) {
-            setTransactions([]);
-          }
+      if (acc) {
+        try {
+          const txs = await api.listTransfers(acc.id, 1, 50);
+          const mapped = (Array.isArray(txs) ? txs : []).map(t => ({
+            id: String(t.id),
+            accountId: String(acc.id),
+            type: t.from_account_id === acc.id ? 'debit' : 'credit',
+            amount: t.amount / 100,
+            description: 'Transfer',
+            category: 'transfer',
+            date: t.created_at,
+            status: 'completed',
+          }));
+          setTransactions(mapped);
+          localStorage.setItem('transactions', JSON.stringify(mapped));
+        } catch (e) {
+          console.error('Failed to load transactions:', e);
+          setTransactions([]);
         }
       }
     }
-    loadFromBackend()
+    loadFromBackend();
   }, []);
   const transfer = async (toAccountId, amount) => {
     setLoading(true);
     try {
-      // backend expects integer amounts; round to nearest integer
-      const intAmount = Number.isInteger(amount) ? amount : Math.round(amount);
+      const intAmount = Math.round(amount * 100);
       const body = { from_account_id: Number(account.id), to_account_id: Number(toAccountId), amount: intAmount, currency: account?.currency || 'USD' };
       const res = await api.createTransfer(body);
       if (res && res.from_account) {
-        setAccount(res.from_account);
+        const updatedAccount = normalizeAccount(res.from_account);
+        setAccount(updatedAccount);
+        localStorage.setItem('account', JSON.stringify(updatedAccount));
       }
-      if (res && res.from_entry) {
-        const newTx = { id: String(res.transfer?.id || Date.now()), accountId: String(account.id), type: 'debit', amount: res.transfer?.amount ?? amount, description: `Transfer to ${toAccountId}`, category: 'transfer', date: res.transfer?.created_at || new Date().toISOString(), status: 'completed' };
+      if (res && res.transfer) {
+        const newTx = { id: String(res.transfer.id), accountId: String(account.id), type: 'debit', amount: amount, description: `Transfer to ${toAccountId}`, category: 'transfer', date: res.transfer.created_at, status: 'completed' };
         const updated = [newTx, ...transactions];
         setTransactions(updated);
         localStorage.setItem('transactions', JSON.stringify(updated));
       }
     } catch (e) {
-      throw e
+      throw e;
     } finally {
       setLoading(false);
     }
   };
   const deposit = async amount => {
-    // backend does not expose a deposit endpoint by default; update state locally
     setLoading(true);
     try {
-      const newBalance = account.balance + amount;
-      const updatedAccount = { ...account, balance: newBalance };
-      setAccount(updatedAccount);
-      localStorage.setItem('account', JSON.stringify(updatedAccount));
-      const newTransaction = { id: String(Date.now()), accountId: account.id, type: 'credit', amount, description: 'Deposit', category: 'deposit', date: new Date().toISOString(), status: 'completed' };
+      const result = await api.deposit(amount);
+      if (result && result.account) {
+        const updatedAccount = normalizeAccount(result.account);
+        setAccount(updatedAccount);
+        localStorage.setItem('account', JSON.stringify(updatedAccount));
+      }
+      // Add transaction to local state for UI
+      const newTransaction = { 
+        id: String(result.entry?.id || Date.now()), 
+        accountId: account.id, 
+        type: 'credit', 
+        amount: amount, 
+        description: 'Deposit', 
+        category: 'deposit', 
+        date: result.entry?.created_at || new Date().toISOString(), 
+        status: 'completed' 
+      };
       const updated = [newTransaction, ...transactions];
       setTransactions(updated);
       localStorage.setItem('transactions', JSON.stringify(updated));
+    } catch (e) {
+      throw e;
     } finally {
       setLoading(false);
     }
   };
   const withdraw = async amount => {
-    // backend does not have withdraw endpoint; apply locally
     setLoading(true);
     try {
-      if (account && account.balance >= amount) {
-        const newBalance = account.balance - amount;
-        const updatedAccount = { ...account, balance: newBalance };
+      const result = await api.withdraw(amount);
+      if (result && result.account) {
+        const updatedAccount = normalizeAccount(result.account);
         setAccount(updatedAccount);
         localStorage.setItem('account', JSON.stringify(updatedAccount));
-        const newTransaction = { id: String(Date.now()), accountId: account.id, type: 'debit', amount, description: 'Withdrawal', category: 'withdrawal', date: new Date().toISOString(), status: 'completed' };
-        const updated = [newTransaction, ...transactions];
-        setTransactions(updated);
-        localStorage.setItem('transactions', JSON.stringify(updated));
       }
+      // Add transaction to local state for UI
+      const newTransaction = { 
+        id: String(result.entry?.id || Date.now()), 
+        accountId: account.id, 
+        type: 'debit', 
+        amount: amount, 
+        description: 'Withdrawal', 
+        category: 'withdrawal', 
+        date: result.entry?.created_at || new Date().toISOString(), 
+        status: 'completed' 
+      };
+      const updated = [newTransaction, ...transactions];
+      setTransactions(updated);
+      localStorage.setItem('transactions', JSON.stringify(updated));
+    } catch (e) {
+      throw e;
     } finally {
       setLoading(false);
     }
@@ -112,7 +144,14 @@ export const BankProvider = ({
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (account) {
+        const txs = await api.listTransfers(account.id, 1, 50);
+        const mapped = (Array.isArray(txs) ? txs : []).map(t => ({ id: String(t.id), accountId: String(account.id), type: t.from_account_id === account.id ? 'debit' : 'credit', amount: t.amount / 100, description: 'Transfer', category: 'transfer', date: t.created_at, status: 'completed' }));
+        setTransactions(mapped);
+        localStorage.setItem('transactions', JSON.stringify(mapped));
+      }
+    } catch (e) {
+      console.error('Failed to fetch transactions:', e);
     } finally {
       setLoading(false);
     }

@@ -69,14 +69,14 @@ const Profile = () => {
                   <Phone className="w-4 h-4" />
                   Phone Number
                 </label>
-                {editMode ? <input type="tel" defaultValue="+1 (555) 000-0000" className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" /> : <p className="text-neutral-900">+1 (555) 000-0000</p>}
+                {editMode ? <input type="tel" placeholder="Enter phone number" className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" /> : <p className="text-neutral-500 italic">Not provided</p>}
               </div>
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-neutral-700 mb-2">
                   <MapPin className="w-4 h-4" />
                   Address
                 </label>
-                {editMode ? <input type="text" defaultValue="123 Main Street, City, State 12345" className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" /> : <p className="text-neutral-900">123 Main Street, City, State 12345</p>}
+                {editMode ? <input type="text" placeholder="Enter address" className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" /> : <p className="text-neutral-500 italic">Not provided</p>}
               </div>
             </div>
           </div>
@@ -91,15 +91,15 @@ const Profile = () => {
               </div>
               <div>
                 <p className="text-sm font-semibold text-neutral-700 mb-2">Account Number</p>
-                <p className="text-neutral-900 font-mono">{account?.accountNumber}</p>
+                <p className="text-neutral-900 font-mono">{account?.id}</p>
               </div>
               <div>
                 <p className="text-sm font-semibold text-neutral-700 mb-2">Current Balance</p>
-                <p className="text-2xl font-bold text-primary-600">${account?.balance.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-primary-600">${(account?.balance / 100).toFixed(2)}</p>
               </div>
               <div>
                 <p className="text-sm font-semibold text-neutral-700 mb-2">Member Since</p>
-                <p className="text-neutral-900">January 2023</p>
+                <p className="text-neutral-900">{user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : 'N/A'}</p>
               </div>
             </div>
           </div>

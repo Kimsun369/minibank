@@ -24,13 +24,13 @@ const BalanceCard = ({
         </div>
 
         {/* Account number */}
-        <p className="text-sm opacity-75 mb-8 tracking-widest">{account.accountNumber}</p>
+        <p className="text-sm opacity-75 mb-8 tracking-widest">{account.id}</p>
 
         {/* Balance display */}
         <div className="mb-4">
           <p className="text-sm opacity-75 mb-2">Available Balance</p>
           <p className="text-4xl font-bold">
-            {visible ? `$${account.balance.toLocaleString('en-US', {
+            {visible ? `$${(account.balance / 100).toLocaleString('en-US', {
             minimumFractionDigits: 2
           })}` : '••••••'}
           </p>

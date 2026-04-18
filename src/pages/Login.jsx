@@ -69,23 +69,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-8">
-            <div className="flex-1 h-px bg-neutral-200" />
-            <p className="text-sm text-neutral-500">Demo Credentials</p>
-            <div className="flex-1 h-px bg-neutral-200" />
-          </div>
-
-          {/* Demo info */}
-          <div className="bg-neutral-50 rounded-lg p-4 mb-6">
-            <p className="text-xs text-neutral-600 mb-2">
-              <strong>Email:</strong> demo@example.com
-            </p>
-            <p className="text-xs text-neutral-600">
-              <strong>Password:</strong> any password
-            </p>
-          </div>
-
           {/* Footer */}
           <div className="text-center">
             <p className="text-neutral-600 text-sm">

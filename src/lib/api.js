@@ -81,6 +81,24 @@ export async function createTransfer(body) {
   return parseResponse(res)
 }
 
+export async function deposit(amount) {
+  const res = await fetch(`${BASE}/accounts/deposit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ amount: Math.round(amount * 100) }), // Convert to cents
+  })
+  return parseResponse(res)
+}
+
+export async function withdraw(amount) {
+  const res = await fetch(`${BASE}/accounts/withdraw`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ amount: Math.round(amount * 100) }), // Convert to cents
+  })
+  return parseResponse(res)
+}
+
 export default {
   registerUser,
   loginUser,
@@ -90,4 +108,6 @@ export default {
   getAccount,
   createAccount,
   createTransfer,
+  deposit,
+  withdraw,
 }

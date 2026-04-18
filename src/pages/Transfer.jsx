@@ -27,7 +27,7 @@ const Transfer = () => {
       setError('Please enter a valid amount');
       return;
     }
-    if (account && transferAmount > account.balance) {
+    if (account && transferAmount > account.balance / 100) {
       setError('Insufficient balance');
       return;
     }

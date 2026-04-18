@@ -22,7 +22,7 @@ const Withdraw = () => {
       setError('Please enter a valid amount');
       return;
     }
-    if (account && withdrawAmount > account.balance) {
+    if (account && withdrawAmount > account.balance / 100) {
       setError('Insufficient balance');
       return;
     }
