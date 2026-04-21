@@ -1,28 +1,28 @@
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useBank } from '../context/BankContext';
-import { User, Mail, Phone, MapPin, Lock, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useBank } from "../context/BankContext";
+import { User, Mail, Phone, MapPin, Lock, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 const Profile = () => {
-  const {
-    user,
-    logout
-  } = useAuth();
-  const {
-    account
-  } = useBank();
+  const { user, logout } = useAuth();
+  const { account } = useBank();
   const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
-  return <div className="min-h-screen bg-neutral-50 p-4 lg:p-6">
+  return (
+    <div className="min-h-screen bg-neutral-50 p-4 lg:p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-neutral-900 mb-2">Profile Settings</h1>
-          <p className="text-neutral-600">Manage your account information and preferences</p>
+          <h1 className="text-3xl font-bold text-neutral-900 mb-2">
+            Profile Settings
+          </h1>
+          <p className="text-neutral-600">
+            Manage your account information and preferences
+          </p>
         </div>
 
         {/* Profile Header Card */}
@@ -31,14 +31,25 @@ const Profile = () => {
           <div className="px-6 pb-6">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 -mt-16 mb-6">
               <div className="flex items-end gap-4">
-                {user?.avatar && <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full border-4 border-white shadow-lg" />}
+                {user?.avatar && (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-24 h-24 rounded-full border-4 border-white shadow-lg"
+                  />
+                )}
                 <div className="mb-2">
-                  <h2 className="text-2xl font-bold text-neutral-900">{user?.name}</h2>
+                  <h2 className="text-2xl font-bold text-neutral-900">
+                    {user?.name}
+                  </h2>
                   <p className="text-neutral-600">{user?.email}</p>
                 </div>
               </div>
-              <button onClick={() => setEditMode(!editMode)} className="px-6 py-2 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-smooth">
-                {editMode ? 'Done' : 'Edit Profile'}
+              <button
+                onClick={() => setEditMode(!editMode)}
+                className="px-6 py-2 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-smooth"
+              >
+                {editMode ? "Done" : "Edit Profile"}
               </button>
             </div>
           </div>
@@ -48,14 +59,24 @@ const Profile = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Personal Details */}
           <div className="card p-6">
-            <h3 className="text-lg font-bold text-neutral-900 mb-6">Personal Information</h3>
+            <h3 className="text-lg font-bold text-neutral-900 mb-6">
+              Personal Information
+            </h3>
             <div className="space-y-4">
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-neutral-700 mb-2">
                   <User className="w-4 h-4" />
                   Full Name
                 </label>
-                {editMode ? <input type="text" defaultValue={user?.name} className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" /> : <p className="text-neutral-900">{user?.name}</p>}
+                {editMode ? (
+                  <input
+                    type="text"
+                    defaultValue={user?.name}
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                ) : (
+                  <p className="text-neutral-900">{user?.name}</p>
+                )}
               </div>
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-neutral-700 mb-2">
@@ -69,37 +90,74 @@ const Profile = () => {
                   <Phone className="w-4 h-4" />
                   Phone Number
                 </label>
-                {editMode ? <input type="tel" placeholder="Enter phone number" className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" /> : <p className="text-neutral-500 italic">Not provided</p>}
+                {editMode ? (
+                  <input
+                    type="tel"
+                    placeholder="Enter phone number"
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                ) : (
+                  <p className="text-neutral-500 italic">Not provided</p>
+                )}
               </div>
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-neutral-700 mb-2">
                   <MapPin className="w-4 h-4" />
                   Address
                 </label>
-                {editMode ? <input type="text" placeholder="Enter address" className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" /> : <p className="text-neutral-500 italic">Not provided</p>}
+                {editMode ? (
+                  <input
+                    type="text"
+                    placeholder="Enter address"
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                ) : (
+                  <p className="text-neutral-500 italic">Not provided</p>
+                )}
               </div>
             </div>
           </div>
 
           {/* Account Information */}
           <div className="card p-6">
-            <h3 className="text-lg font-bold text-neutral-900 mb-6">Account Information</h3>
+            <h3 className="text-lg font-bold text-neutral-900 mb-6">
+              Account Information
+            </h3>
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-semibold text-neutral-700 mb-2">Account Type</p>
-                <p className="text-neutral-900 capitalize">{account?.type} Account</p>
+                <p className="text-sm font-semibold text-neutral-700 mb-2">
+                  Account Type
+                </p>
+                <p className="text-neutral-900 capitalize">
+                  {account?.type} Account
+                </p>
               </div>
               <div>
-                <p className="text-sm font-semibold text-neutral-700 mb-2">Account Number</p>
+                <p className="text-sm font-semibold text-neutral-700 mb-2">
+                  Account Number
+                </p>
                 <p className="text-neutral-900 font-mono">{account?.id}</p>
               </div>
               <div>
-                <p className="text-sm font-semibold text-neutral-700 mb-2">Current Balance</p>
-                <p className="text-2xl font-bold text-primary-600">${(account?.balance / 100).toFixed(2)}</p>
+                <p className="text-sm font-semibold text-neutral-700 mb-2">
+                  Current Balance
+                </p>
+                <p className="text-2xl font-bold text-primary-600">
+                  ${(account?.balance / 100).toFixed(2)}
+                </p>
               </div>
               <div>
-                <p className="text-sm font-semibold text-neutral-700 mb-2">Member Since</p>
-                <p className="text-neutral-900">{user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : 'N/A'}</p>
+                <p className="text-sm font-semibold text-neutral-700 mb-2">
+                  Member Since
+                </p>
+                <p className="text-neutral-900">
+                  {user?.created_at
+                    ? new Date(user.created_at).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                      })
+                    : "N/A"}
+                </p>
               </div>
             </div>
           </div>
@@ -107,14 +165,20 @@ const Profile = () => {
 
         {/* Security Settings */}
         <div className="card p-6 mb-6">
-          <h3 className="text-lg font-bold text-neutral-900 mb-6">Security Settings</h3>
+          <h3 className="text-lg font-bold text-neutral-900 mb-6">
+            Security Settings
+          </h3>
           <div className="space-y-4">
             <button className="w-full flex items-center justify-between p-4 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-smooth">
               <div className="flex items-center gap-3">
                 <Lock className="w-5 h-5 text-neutral-600" />
                 <div className="text-left">
-                  <p className="font-semibold text-neutral-900">Change Password</p>
-                  <p className="text-sm text-neutral-600">Update your password regularly</p>
+                  <p className="font-semibold text-neutral-900">
+                    Change Password
+                  </p>
+                  <p className="text-sm text-neutral-600">
+                    Update your password regularly
+                  </p>
                 </div>
               </div>
               <span className="text-neutral-400">→</span>
@@ -123,8 +187,12 @@ const Profile = () => {
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🔐</span>
                 <div className="text-left">
-                  <p className="font-semibold text-neutral-900">Two-Factor Authentication</p>
-                  <p className="text-sm text-neutral-600">Enable additional security</p>
+                  <p className="font-semibold text-neutral-900">
+                    Two-Factor Authentication
+                  </p>
+                  <p className="text-sm text-neutral-600">
+                    Enable additional security
+                  </p>
                 </div>
               </div>
               <span className="text-neutral-400">→</span>
@@ -134,13 +202,19 @@ const Profile = () => {
 
         {/* Danger Zone */}
         <div className="card p-6 border-l-4 border-red-600">
-          <h3 className="text-lg font-bold text-neutral-900 mb-6">Danger Zone</h3>
-          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-50 text-red-600 font-semibold rounded-lg hover:bg-red-100 transition-smooth">
+          <h3 className="text-lg font-bold text-neutral-900 mb-6">
+            Danger Zone
+          </h3>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-50 text-red-600 font-semibold rounded-lg hover:bg-red-100 transition-smooth"
+          >
             <LogOut className="w-5 h-5" />
             Logout
           </button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
 export default Profile;
