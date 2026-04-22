@@ -3,10 +3,8 @@ import { useAuth } from "../context/AuthContext";
 import { useBank } from "../context/BankContext";
 import {
   User,
-  Mail,
   Lock,
   LogOut,
-  Upload,
   X,
   AlertCircle,
   CheckCircle,
@@ -30,8 +28,6 @@ const Profile = () => {
 
   const [formData, setFormData] = useState({
     full_name: user?.full_name || "",
-    email: user?.email || "",
-    avatar: user?.avatar || "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -43,8 +39,6 @@ const Profile = () => {
     showConfirm: false,
   });
 
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || null);
-
   // Fetch fresh user data from backend on component mount
   useEffect(() => {
     const fetchUserData = async () => {
@@ -53,15 +47,19 @@ const Profile = () => {
       setIsFetchingUser(true);
       try {
         // Fetch fresh user data from backend
-        // For now, we rely on the user data from login/localStorage
-        // This ensures we have the latest data when page loads
+        const freshUserData = await api.getUser(user.username);
+        
+        // Update form with fresh backend data
+        setFormData({
+          full_name: freshUserData.full_name || "",
+        });
+      } catch (err) {
+        console.warn("Could not fetch fresh user data:", err.message);
+        // Fall back to context user data
         if (user) {
           setFormData({
             full_name: user.full_name || "",
-            email: user.email || "",
-            avatar: user.avatar || "",
           });
-          setAvatarPreview(user.avatar || null);
         }
       } finally {
         setIsFetchingUser(false);
@@ -76,10 +74,7 @@ const Profile = () => {
     if (user && !editMode) {
       setFormData({
         full_name: user.full_name || "",
-        email: user.email || "",
-        avatar: user.avatar || "",
       });
-      setAvatarPreview(user.avatar || null);
     }
   }, [user, editMode]);
 
@@ -93,41 +88,9 @@ const Profile = () => {
     }
   };
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
   const validatePassword = (password) => {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
     return passwordRegex.test(password);
-  };
-
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        showMessage("Please upload a valid image file", "error");
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        showMessage("Image size must be less than 5MB", "error");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result);
-        setFormData({ ...formData, avatar: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleDeleteAvatar = () => {
-    setAvatarPreview(null);
-    setFormData({ ...formData, avatar: "" });
   };
 
   const handleSaveProfile = async () => {
@@ -136,58 +99,29 @@ const Profile = () => {
       return;
     }
 
-    if (!formData.email.trim()) {
-      showMessage("Email cannot be empty", "error");
-      return;
-    }
-
-    if (!validateEmail(formData.email)) {
-      showMessage("Please enter a valid email address", "error");
-      return;
-    }
-
     setIsLoading(true);
     try {
       const payload = {
         full_name: formData.full_name,
-        email: formData.email,
       };
 
-      // Include avatar only if it changed
-      if (formData.avatar !== user?.avatar) {
-        payload.avatar = formData.avatar || "";
-      }
+      // Call API to update user on backend
+      const response = await api.updateUser(user.username, payload);
 
-      try {
-        // Call API to update user on backend
-        const response = await api.updateUser(user.username, payload);
-
-        // Update local state with response from backend
-        const updatedUser = {
-          ...user,
-          full_name: response.user?.full_name || formData.full_name,
-          email: response.user?.email || formData.email,
-          avatar: formData.avatar,
-        };
-        setUser(updatedUser);
-
-        setEditMode(false);
-        showMessage("Profile updated successfully", "success");
-      } catch (apiError) {
-        // If API fails, still update locally but show different message
-        console.warn("Error updating profile via API:", apiError.message);
-
-        const updatedUser = {
-          ...user,
-          full_name: formData.full_name,
-          email: formData.email,
-          avatar: formData.avatar,
-        };
-        setUser(updatedUser);
-
-        setEditMode(false);
-        showMessage("Profile updated (stored locally)", "success");
-      }
+      // Update local state with response from backend
+      // Response format: { user: { username, full_name, email, ... } }
+      const updatedUserData = response.user || response;
+      const updatedUser = {
+        ...user,
+        full_name: updatedUserData.full_name || formData.full_name,
+      };
+      
+      setUser(updatedUser);
+      setEditMode(false);
+      showMessage("Profile updated successfully", "success");
+    } catch (apiError) {
+      const errorMsg = apiError.message || "Failed to update profile";
+      showMessage(errorMsg, "error");
     } finally {
       setIsLoading(false);
     }
@@ -260,12 +194,6 @@ const Profile = () => {
     navigate("/login");
   };
 
-  const getDefaultAvatar = () => {
-    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.full_name || "user"}`;
-  };
-
-  const displayAvatar = avatarPreview || getDefaultAvatar();
-
   return (
     <div className="min-h-screen bg-neutral-50 p-4 lg:p-6">
       <div className="max-w-4xl mx-auto">
@@ -298,39 +226,18 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 -mt-16 mb-6">
               <div className="flex items-end gap-4">
                 <div className="relative">
+                  {/* Default avatar based on user name */}
                   <img
-                    src={displayAvatar}
-                    alt={formData.name}
-                    className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover"
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.full_name || "user"}`}
+                    alt="Profile"
+                    className="w-24 h-24 rounded-full border-4 border-white bg-white shadow-lg"
                   />
-                  {editMode && (
-                    <>
-                      <label className="absolute bottom-0 right-0 p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 cursor-pointer shadow-lg">
-                        <Upload className="w-4 h-4" />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleAvatarChange}
-                          className="hidden"
-                        />
-                      </label>
-                      {avatarPreview && (
-                        <button
-                          onClick={handleDeleteAvatar}
-                          className="absolute bottom-0 left-0 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 cursor-pointer shadow-lg"
-                          title="Delete Avatar"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
-                    </>
-                  )}
                 </div>
                 <div className="mb-2">
                   <h2 className="text-2xl font-bold text-neutral-900">
                     {formData.full_name}
                   </h2>
-                  <p className="text-neutral-600">{formData.email}</p>
+                  <p className="text-neutral-600">{user?.email}</p>
                 </div>
               </div>
               <button
@@ -351,18 +258,6 @@ const Profile = () => {
                   : "Edit Profile"}
               </button>
             </div>
-
-            {editMode && avatarPreview && (
-              <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-blue-800 text-sm">Avatar will be updated</p>
-                <button
-                  onClick={handleDeleteAvatar}
-                  className="text-blue-600 hover:text-blue-800 transition-smooth"
-                >
-                  Remove
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
@@ -385,6 +280,7 @@ const Profile = () => {
                       setFormData({ ...formData, full_name: e.target.value })
                     }
                     className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="Enter your full name"
                   />
                 ) : (
                   <p className="text-neutral-900">{formData.full_name}</p>
@@ -393,21 +289,12 @@ const Profile = () => {
 
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-neutral-700 mb-2">
-                  <Mail className="w-4 h-4" />
                   Email Address
                 </label>
-                {editMode ? (
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                ) : (
-                  <p className="text-neutral-900">{formData.email}</p>
-                )}
+                <p className="text-neutral-900">{user?.email}</p>
+                <p className="text-xs text-neutral-500 mt-1">
+                  Email cannot be changed
+                </p>
               </div>
             </div>
           </div>
@@ -417,6 +304,12 @@ const Profile = () => {
               Account Information
             </h3>
             <div className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-neutral-700 mb-2">
+                  Username
+                </p>
+                <p className="text-neutral-900 font-mono">{user?.username}</p>
+              </div>
               <div>
                 <p className="text-sm font-semibold text-neutral-700 mb-2">
                   Account Type

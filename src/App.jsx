@@ -5,7 +5,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
-import Transfer from './pages/Transfer';
 import Deposit from './pages/Deposit';
 import Withdraw from './pages/Withdraw';
 import Profile from './pages/Profile';
@@ -30,11 +29,6 @@ const AppRoutes = () => {
       <Route path="/transactions" element={<PrivateRoute>
             <Layout>
               <Transactions />
-            </Layout>
-          </PrivateRoute>} />
-      <Route path="/transfer" element={<PrivateRoute>
-            <Layout>
-              <Transfer />
             </Layout>
           </PrivateRoute>} />
       <Route path="/deposit" element={<PrivateRoute>

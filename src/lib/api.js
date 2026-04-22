@@ -126,6 +126,14 @@ export async function clearSpending(action) {
   return parseResponse(res);
 }
 
+// Get user profile
+export async function getUser(username) {
+  const res = await fetch(`${BASE}/users/${username}`, {
+    headers: { ...authHeaders() },
+  });
+  return parseResponse(res);
+}
+
 // Profile update endpoint
 export async function updateUser(username, payload) {
   const res = await fetch(`${BASE}/users/${username}`, {
@@ -163,6 +171,7 @@ export default {
   createTransfer,
   deposit,
   withdraw,
+  getUser,
   updateUser,
   changePassword,
 };

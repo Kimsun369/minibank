@@ -22,17 +22,26 @@ export const AuthProvider = ({ children }) => {
     setUserState(normalized);
     if (normalized) {
       localStorage.setItem("user", JSON.stringify(normalized));
+      // Also store avatar separately for persistence
+      if (normalized.avatar) {
+        localStorage.setItem("userAvatar", normalized.avatar);
+      }
     }
   };
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const storedOverrides = localStorage.getItem("userOverrides");
+    const storedAvatar = localStorage.getItem("userAvatar");
     if (storedUser) {
       let userData = JSON.parse(storedUser);
       if (storedOverrides) {
         const overrides = JSON.parse(storedOverrides);
         userData = { ...userData, ...overrides };
+      }
+      // Restore avatar from localStorage if it exists
+      if (storedAvatar) {
+        userData.avatar = storedAvatar;
       }
       setUserState(normalizeUser(userData));
     }
@@ -84,6 +93,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("account");
     localStorage.removeItem("userOverrides");
+    localStorage.removeItem("userAvatar");
     // Keep transactions in localStorage for persistence
     // localStorage.removeItem('transactions');
   };

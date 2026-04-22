@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Send, Plus, Minus, History, X, User } from "lucide-react";
+import { Home, Plus, Minus, History, X, User } from "lucide-react";
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const menuItems = [
@@ -13,11 +13,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       path: "/transactions",
       label: "Transactions",
       icon: History,
-    },
-    {
-      path: "/transfer",
-      label: "Transfer",
-      icon: Send,
     },
     {
       path: "/deposit",
