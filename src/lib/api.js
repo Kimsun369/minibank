@@ -110,6 +110,22 @@ export async function listEntries(account_id, page_id = 1, page_size = 50) {
   return parseResponse(res);
 }
 
+export async function getSpendingClearConfig() {
+  const res = await fetch(`${BASE}/spending/clear-config`, {
+    headers: { ...authHeaders() },
+  });
+  return parseResponse(res);
+}
+
+export async function clearSpending(action) {
+  const res = await fetch(`${BASE}/spending/clear`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ action }),
+  });
+  return parseResponse(res);
+}
+
 // Profile update endpoint
 export async function updateUser(username, payload) {
   const res = await fetch(`${BASE}/users/${username}`, {
@@ -140,6 +156,8 @@ export default {
   listAccounts,
   listTransfers,
   listEntries,
+  getSpendingClearConfig,
+  clearSpending,
   getAccount,
   createAccount,
   createTransfer,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useBank } from '../context/BankContext';
+import api from '../lib/api';
 
 const SpendingSummary = () => {
   const { transactions } = useBank();
@@ -29,7 +30,10 @@ const SpendingSummary = () => {
 
   return (
     <div className="card p-6">
-      <h3 className="text-lg font-bold text-neutral-900 mb-6">Weekly Spending</h3>
+      <div className="flex items-start justify-between mb-4">
+        <h3 className="text-lg font-bold text-neutral-900">Weekly Spending</h3>
+        <ClearSpendingControl />
+      </div>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
           <defs>
@@ -66,3 +70,68 @@ const SpendingSummary = () => {
   );
 };
 export default SpendingSummary;
+
+function ClearSpendingControl() {
+  const { fetchTransactions } = useBank();
+  const [config, setConfig] = React.useState({ enabled: false, options: [] });
+  const [open, setOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    let mounted = true;
+    api.getSpendingClearConfig().then(cfg => {
+      console.debug('spending clear config response:', cfg);
+      if (!mounted) return;
+      setConfig(cfg);
+    }).catch(err => {
+      console.debug('spending clear config error:', err);
+    });
+    return () => { mounted = false };
+  }, []);
+
+  const handleAction = async (action) => {
+    setLoading(true);
+    try {
+      await api.clearSpending(action);
+      await fetchTransactions();
+      setOpen(false);
+    } catch (e) {
+      console.error('Failed to clear spending:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!config.enabled || !Array.isArray(config.options) || config.options.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="px-3 py-1 text-sm font-medium bg-neutral-100 rounded-md"
+        disabled={loading}
+      >
+        Clear
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-20">
+          {config.options.map(opt => {
+            const label = opt === 'this_week' ? 'Clear This Week' : opt === 'today' ? 'Clear Today' : opt;
+            return (
+              <button
+                key={opt}
+                onClick={() => handleAction(opt)}
+                className="w-full text-left px-3 py-2 hover:bg-neutral-50"
+                disabled={loading}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
