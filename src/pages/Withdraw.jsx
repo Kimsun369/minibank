@@ -304,45 +304,6 @@ const Withdraw = () => {
               </div>
             </div>
           </div>
-
-          {/* Right Sidebar - Information (Matching Dashboard style) */}
-          <div className="space-y-6">
-            {/* Security Info */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl">
-                  <Shield className="w-5 h-5 text-purple-600" />
-                </div>
-                <h3 className="font-semibold text-slate-800">Secure Withdrawal</h3>
-              </div>
-              <p className="text-sm text-slate-600 mb-3">
-                All withdrawals are protected by bank-level security and fraud monitoring.
-              </p>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <Clock className="w-3 h-3" />
-                <span>ATM: Instant | Transfer: 1-2 days</span>
-              </div>
-            </div>
-
-            {/* Daily Limit Info */}
-            <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100 hover:shadow-md transition-all duration-300">
-              <p className="text-xs text-blue-700">
-                💡 <span className="font-semibold">Daily Limit:</span> You can withdraw up to $10,000 per day. Your remaining daily limit is ${(10000 - (parseFloat(amount) || 0)).toLocaleString()}.
-              </p>
-            </div>
-
-            {/* Help */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300">
-              <h3 className="font-semibold text-slate-800 mb-2">Need Help?</h3>
-              <p className="text-sm text-slate-600 mb-3">
-                Having trouble with your withdrawal? Our support team is here to help 24/7.
-              </p>
-              <button className="text-purple-600 text-sm font-semibold hover:text-purple-700 hover:translate-x-1 transition-all duration-300 inline-flex items-center gap-1">
-                Contact Support
-                <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 

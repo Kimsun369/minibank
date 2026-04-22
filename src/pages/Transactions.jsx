@@ -147,17 +147,6 @@ const Transactions = () => {
         <div className="bg-white rounded-2xl shadow-lg mb-8 overflow-hidden">
           <div className="p-6">
             <div className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search transactions by description..." 
-                  value={searchTerm} 
-                  onChange={e => setSearchTerm(e.target.value)} 
-                  className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 text-slate-800 placeholder:text-slate-400"
-                />
-              </div>
-
               <div className="flex gap-3 flex-wrap">
                 <button 
                   onClick={() => setFilterType('all')} 

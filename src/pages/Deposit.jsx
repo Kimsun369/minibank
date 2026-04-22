@@ -277,45 +277,6 @@ const Deposit = () => {
               </div>
             </div>
           </div>
-
-          {/* Right Sidebar - Information (Matching Dashboard style) */}
-          <div className="space-y-6">
-            {/* Security Info - Matching stats card style */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl">
-                  <Shield className="w-5 h-5 text-purple-600" />
-                </div>
-                <h3 className="font-semibold text-slate-800">Secure Transaction</h3>
-              </div>
-              <p className="text-sm text-slate-600 mb-3">
-                Your deposit is protected by bank-level encryption and fraud protection.
-              </p>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <Clock className="w-3 h-3" />
-                <span>Instant processing for card payments</span>
-              </div>
-            </div>
-
-            {/* Tip - Matching Dashboard accent style */}
-            <div className="bg-amber-50 rounded-2xl p-5 border border-amber-100 hover:shadow-md transition-all duration-300">
-              <p className="text-xs text-amber-700">
-                💡 <span className="font-semibold">Tip:</span> Deposits made before 2 PM EST are processed same business day.
-              </p>
-            </div>
-
-            {/* Help */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300">
-              <h3 className="font-semibold text-slate-800 mb-2">Need Help?</h3>
-              <p className="text-sm text-slate-600 mb-3">
-                Having trouble with your deposit? Our support team is here to help 24/7.
-              </p>
-              <button className="text-purple-600 text-sm font-semibold hover:text-purple-700 hover:translate-x-1 transition-all duration-300 inline-flex items-center gap-1">
-                Contact Support
-                <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 

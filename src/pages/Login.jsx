@@ -223,10 +223,6 @@ const Login = () => {
                     evolves with you
                   </span>
                 </h1>
-                <p className="text-white/60 text-sm leading-relaxed animate-slideRight animation-delay-200">
-                  Join the future of banking with AI-powered insights, 
-                  military-grade security, and instant global transfers.
-                </p>
               </div>
             </div>
 
@@ -405,15 +401,6 @@ const Login = () => {
                     </p>
                   )}
                 </div>
-
-                {/* Forgot Password */}
-                <div className="text-right">
-                  <Link to="/forgot-password" className="text-sm text-purple-600 hover:text-purple-700 transition-all duration-300 hover:translate-x-1 inline-flex items-center gap-1">
-                    Forgot password?
-                    <ChevronRight className="w-3 h-3" />
-                  </Link>
-                </div>
-
                 {/* Submit Button with Ripple Effect */}
                 <button 
                   type="submit" 
