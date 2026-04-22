@@ -226,26 +226,7 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Animated Stats Cards */}
-            <div className="grid grid-cols-3 gap-4 mb-12">
-              {[
-                { value: animatedNumbers.users, label: 'Active Users', icon: Users, suffix: '+', delay: 0 },
-                { value: animatedNumbers.transactions, label: 'Transactions', icon: Globe, suffix: '+', delay: 0.1, format: (v) => `$${(v / 1000000000).toFixed(1)}B` },
-                { value: animatedNumbers.uptime, label: 'Uptime', icon: CreditCard, suffix: '%', delay: 0.2 }
-              ].map((stat, idx) => (
-                <div 
-                  key={idx} 
-                  className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/10 transition-all duration-500 hover:scale-110 cursor-pointer group/stat animate-scaleUp"
-                  style={{ animationDelay: `${stat.delay}s` }}
-                >
-                  <stat.icon className="w-5 h-5 text-purple-400 mx-auto mb-2 group-hover/stat:rotate-12 transition-transform duration-300" />
-                  <p className="text-2xl font-bold text-white">
-                    {stat.format ? stat.format(stat.value) : stat.value.toLocaleString()}{stat.suffix}
-                  </p>
-                  <p className="text-xs text-white/40">{stat.label}</p>
-                </div>
-              ))}
-            </div>
+            
 
             {/* Exchange Rates Widget */}
             <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 border border-white/10 hover:border-purple-500/50 transition-all duration-500 animate-fadeUp">
