@@ -74,7 +74,7 @@ const Withdraw = () => {
                 <div className="p-4 bg-neutral-50 rounded-lg">
                   <p className="text-sm text-neutral-600 mb-1">Available Balance</p>
                   <p className="text-2xl font-bold text-neutral-900">
-                    ${account?.balance.toFixed(2)}
+                    ${(account?.balance / 100).toFixed(2)}
                   </p>
                 </div>
 
@@ -106,7 +106,7 @@ const Withdraw = () => {
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-3 text-neutral-600 font-semibold">$</span>
-                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" step="0.01" min="0" max={account?.balance.toString()} className="w-full pl-8 pr-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-smooth" />
+                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" step="0.01" min="0" max={(account?.balance / 100).toString()} className="w-full pl-8 pr-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-smooth" />
                   </div>
                 </div>
 

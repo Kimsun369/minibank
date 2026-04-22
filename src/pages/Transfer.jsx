@@ -80,7 +80,7 @@ const Transfer = () => {
                 <div className="p-4 bg-neutral-50 rounded-lg">
                   <p className="text-sm text-neutral-600 mb-1">Available Balance</p>
                   <p className="text-2xl font-bold text-neutral-900">
-                    ${account?.balance.toFixed(2)}
+                    ${(account?.balance / 100).toFixed(2)}
                   </p>
                 </div>
 
