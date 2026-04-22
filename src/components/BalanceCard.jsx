@@ -8,7 +8,7 @@ const BalanceCard = ({
     account
   } = useBank();
   if (!account) return null;
-  return <div className="relative h-56 bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl p-8 text-white overflow-hidden group cursor-pointer transition-smooth hover:shadow-2xl">
+  return <div className="relative h-64 bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 rounded-2xl p-10 text-white overflow-hidden group cursor-pointer transition-smooth hover:shadow-2xl">
       {/* Background decorative elements */}
       <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-10 -mt-10 group-hover:scale-110 transition-transform duration-300" />
       <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-8 -mb-8" />
@@ -24,7 +24,7 @@ const BalanceCard = ({
         </div>
 
         {/* Account number */}
-        <p className="text-sm opacity-75 mb-8 tracking-widest">{account.id}</p>
+        
 
         {/* Balance display */}
         <div className="mb-4">

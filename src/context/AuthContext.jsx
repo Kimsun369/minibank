@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import api from "../lib/api";
+
 const AuthContext = createContext(undefined);
 
 // Normalize user object to use full_name consistently
@@ -15,6 +16,7 @@ const normalizeUser = (userData) => {
 export const AuthProvider = ({ children }) => {
   const [user, setUserState] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
 
   // Wrapper for setUser that normalizes the data
   const setUser = (userData) => {
@@ -29,11 +31,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Check for existing session on mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const storedOverrides = localStorage.getItem("userOverrides");
     const storedAvatar = localStorage.getItem("userAvatar");
-    if (storedUser) {
+    const token = localStorage.getItem("access_token");
+    
+    if (storedUser && token) {
       let userData = JSON.parse(storedUser);
       if (storedOverrides) {
         const overrides = JSON.parse(storedOverrides);
@@ -45,6 +50,7 @@ export const AuthProvider = ({ children }) => {
       }
       setUserState(normalizeUser(userData));
     }
+    setInitializing(false);
   }, []);
 
   const login = async (emailOrUsername, password) => {
@@ -56,6 +62,7 @@ export const AuthProvider = ({ children }) => {
         : emailOrUsername;
       const payload = { username, password };
       const res = await api.loginUser(payload);
+      
       if (res && res.access_token) {
         localStorage.setItem("access_token", res.access_token);
       }
@@ -64,8 +71,15 @@ export const AuthProvider = ({ children }) => {
       }
       if (res && res.user) {
         setUser(res.user);
+        // Return success response for the Login component
+        return { success: true, user: res.user };
       }
-      return res;
+      
+      // If we get here but no user data, return error
+      return { success: false, error: "Login failed" };
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -81,21 +95,22 @@ export const AuthProvider = ({ children }) => {
       // after register, attempt login to obtain tokens
       await login(email, password);
       return res;
+    } catch (error) {
+      console.error("Register error:", error);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
   const logout = () => {
-    setUser(null);
+    setUserState(null);
     localStorage.removeItem("user");
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("account");
     localStorage.removeItem("userOverrides");
     localStorage.removeItem("userAvatar");
-    // Keep transactions in localStorage for persistence
-    // localStorage.removeItem('transactions');
   };
 
   const setUserOverride = (overrides) => {
@@ -110,15 +125,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Calculate isAuthenticated based on user and token
+  const isAuthenticated = !!user && !!localStorage.getItem("access_token");
+
   return (
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        isAuthenticated,  // ADD THIS - was missing!
         login,
         register,
         logout,
         loading,
+        initializing,     // ADD THIS for loading state on app start
         setUser,
         setUserOverride,
       }}
