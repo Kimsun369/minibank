@@ -23,9 +23,9 @@ const Navbar = ({
         <div className="flex items-center gap-4">
           {user && <>
               <div className="hidden md:flex items-center gap-3">
-                {user.avatar && <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full border-2 border-primary-200" />}
+                {user.avatar && <img src={user.avatar} alt={user.full_name} className="w-10 h-10 rounded-full border-2 border-primary-200" />}
                 <div>
-                  <p className="text-sm font-medium text-neutral-900">{user.name}</p>
+                  <p className="text-sm font-medium text-neutral-900">{user.full_name}</p>
                   <p className="text-xs text-neutral-500">{user.email}</p>
                 </div>
               </div>

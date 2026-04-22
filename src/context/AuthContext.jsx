@@ -1,13 +1,41 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import api from "../lib/api";
 const AuthContext = createContext(undefined);
+
+// Normalize user object to use full_name consistently
+const normalizeUser = (userData) => {
+  if (!userData) return null;
+  return {
+    ...userData,
+    // Ensure we have full_name field (not name)
+    full_name: userData.full_name || userData.name || "",
+  };
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUserState] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Wrapper for setUser that normalizes the data
+  const setUser = (userData) => {
+    const normalized = normalizeUser(userData);
+    setUserState(normalized);
+    if (normalized) {
+      localStorage.setItem("user", JSON.stringify(normalized));
+    }
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    const storedOverrides = localStorage.getItem("userOverrides");
+    if (storedUser) {
+      let userData = JSON.parse(storedUser);
+      if (storedOverrides) {
+        const overrides = JSON.parse(storedOverrides);
+        userData = { ...userData, ...overrides };
+      }
+      setUserState(normalizeUser(userData));
+    }
   }, []);
 
   const login = async (emailOrUsername, password) => {
@@ -26,7 +54,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("refresh_token", res.refresh_token);
       }
       if (res && res.user) {
-        localStorage.setItem("user", JSON.stringify(res.user));
         setUser(res.user);
       }
       return res;
@@ -56,8 +83,21 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("account");
+    localStorage.removeItem("userOverrides");
     // Keep transactions in localStorage for persistence
     // localStorage.removeItem('transactions');
+  };
+
+  const setUserOverride = (overrides) => {
+    const currentOverrides = JSON.parse(
+      localStorage.getItem("userOverrides") || "{}",
+    );
+    const newOverrides = { ...currentOverrides, ...overrides };
+    localStorage.setItem("userOverrides", JSON.stringify(newOverrides));
+    if (user) {
+      const updatedUser = { ...user, ...newOverrides };
+      setUser(updatedUser);
+    }
   };
 
   return (
@@ -69,6 +109,8 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         loading,
+        setUser,
+        setUserOverride,
       }}
     >
       {children}

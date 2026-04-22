@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Send, Plus, Minus, History, X } from "lucide-react";
+import { Home, Send, Plus, Minus, History, X, User } from "lucide-react";
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const menuItems = [
@@ -28,6 +28,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       path: "/withdraw",
       label: "Withdraw",
       icon: Minus,
+    },
+    {
+      path: "/profile",
+      label: "Profile",
+      icon: User,
     },
   ];
   const isActive = (path) => location.pathname === path;
